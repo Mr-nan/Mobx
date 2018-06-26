@@ -18,8 +18,8 @@ import {
 
 const ScreenWidth = Dimensions.get('window').width;
 
-import { observable } from 'mobx';
-import { observer } from 'mobx-react';
+import { observable,action,computed } from 'mobx';
+import { observer } from 'mobx-react/native';
 
 import MobxCell from './MobxCell';
 
@@ -37,6 +37,18 @@ import MobxCell from './MobxCell';
       this.state={
           dataSource:ds,
       }
+
+      this.sumPrice = computed(()=>{
+          return(
+              this.data.reduce((a,b)=>{
+                  if(b.isSelect){
+                      return a+b.number *b.price;
+                  }else {
+                      return a;
+                  }
+              },0)
+          )
+      })
 
     }
 
@@ -93,7 +105,7 @@ import MobxCell from './MobxCell';
                   <Text style={{color:'white',marginLeft:10}}>全选</Text>
               </TouchableOpacity>
               <View>
-                  <Text style={{color:'white'}}>合计：{this.sumAction()}元</Text>
+                  <Text style={{color:'white'}}>合计：{this.sumPrice.get()}元</Text>
               </View>
           </View>
       </View>
@@ -102,12 +114,10 @@ import MobxCell from './MobxCell';
     allSelectAction=()=>{
         this.allSelect=!this.allSelect;
 
-        for (let i=0;i<this.data;i++){
-            this.data[i].isSelect = this.allSelect.get();
+        for (let i=0;i<this.data.length;i++){
+            this.data[i].isSelect = this.allSelect;
         }
-        this.setState({
-            dataSource:this.state.dataSource.cloneWithRows(this.data)
-        })
+
 
     }
     sumAction=()=>{
@@ -121,9 +131,30 @@ import MobxCell from './MobxCell';
             },0)
         )
     }
+
+    rowSelectClick=()=>{
+        let tmpSelect = true;
+        for (let i=0;i<this.data.length;i++){
+            if(!this.data[i].isSelect){
+                tmpSelect = false;
+                break;
+            }
+        }
+        this.allSelect = tmpSelect;
+    }
+
+    @action
+    delectClick=(index)=>{
+        this.data.splice(index,1);
+        this.rowSelectClick();
+        this.setState({
+            dataSource:this.state.dataSource.cloneWithRows(this.data)
+        })
+    };
+
      renderRow =(rowData,sectionID,rowID)=> {
          return(
-             <MobxCell  index={rowID} cellData={rowData}  data={this.data}/>
+             <MobxCell  index={rowID} cellData={rowData}  data={this.data} rowSelectClick={this.rowSelectClick} delectClick={this.delectClick}/>
          )
      }
      renderSeparator = (sectionID,rowID)=>{

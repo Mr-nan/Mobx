@@ -11,69 +11,99 @@ class CarData{
     @observable sumPrice = 0;
     @observable sumNumber = 0;
 
-   @action
-    setData=(array)=>{
-       this.carArray = array;
-    };
+    constructor(){
+        this.isAllSelect = false;
+        this.sumPrice=computed(()=>{
+            return this.carArray.reduce((a,b)=>{
+                if(b.isSelect){
+                    return a+b.number *b.price
+                }else {
+                    return a;
+                }
+            },0);
+        });
 
-   @action
-    plus =(index)=>{
+        this.sumNumber = computed(()=>{
+            return this.carArray.reduce((a,b)=>{
+                if(b.isSelect){
+                    return a+b.number;
+                }else {
+                    return a;
+                }
+            },0);
+        });
+
+    }
+
+    addData(array){
+       this.carArray = array;
+    }
+
+   @action // 数量加1
+    plus(index){
        this.carArray[index].number+=1;
     };
 
-    @action
-     minus=(index)=>{
+    @action // 数量减1
+     minus(index){
        if(this.carArray[index].number<=0)   return;
        this.carArray[index].number-=1;
      };
 
-    @action
-    checked=(index,isSelect)=>{
+    @action // 单选按钮事件
+    checked(index){
+        let isSelect = !this.carArray[index].isSelect;
         this.carArray[index].isSelect = isSelect;
 
         if(!isSelect){
             this.isAllSelect = false;
         }else {
-            let tmpAllSelect = true;
-            for (let info in this.carArray){
-                if(!info.isSelect){
-                    tmpAllSelect = false;
-                    break;
-                }
-            }
-            this.isAllSelect = tmpAllSelect;
+           this.checkedType();
         }
     };
 
-    @action
-    allCheced=(isSelect)=>{
-        for(let i=0;i<this.carArray.length;i++){
+    @action //全选按钮事件
+    allCheced(){
+
+        if(this.carArray.length<=0) return;
+
+        let isSelect = !this.isAllSelect;
+        this.isAllSelect = isSelect;
+
+        this.carArray.forEach(e=>{
+           e.isSelect = isSelect;
+        });
+
+        // for(let i=0;i<this.carArray.length;i++){
+        //         this.carArray[i].isSelect = isSelect;
+        // }
+    }
+
+
+    @action //删除
+    delectItem(index){
+        this.carArray.splice(index,1);
+        if(this.carArray.length<=0){
+            this.isAllSelect = false;
+        }else {
+            this.checkedType();
 
         }
     }
 
-    @action
-    getSumPrice=()=>{
-        return this.carArray.reduce((a,b)=>{
-            if(b.isSelect){
-                return a+b.number *b.price
-            }else {
-                return a;
-            }
-        },0);
-    };
+    checkedType(){
 
-    @action
-    getSumNumber=()=>{
-        return this.carArray.reduce((a,b)=>{
-            if(b.isSelect){
-                return a+b.number;
-            }else {
-                return a;
+        let  tmpSelect = true;
+        for (let data of this.carArray){
+            if(!data.isSelect){
+                tmpSelect = false;
+                break;
             }
-        },0);
-    };
+        }
+       this.isAllSelect = tmpSelect;
+    }
 
 }
 
+export  default  new CarData();
 
